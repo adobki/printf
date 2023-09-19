@@ -10,7 +10,24 @@
  */
 int print_char(char c)
 {
-	return (write(STDOUT_FILENO, &c, 1));
+	int ret = 0;
+	char *str;
+
+	if (c)
+		ret = write(STDOUT_FILENO, &c, 1);
+	else
+	{
+		str = "(null)";
+		write(STDOUT_FILENO, str++, 1);
+		write(STDOUT_FILENO, str++, 1);
+		write(STDOUT_FILENO, str++, 1);
+		write(STDOUT_FILENO, str++, 1);
+		write(STDOUT_FILENO, str++, 1);
+		write(STDOUT_FILENO, str++, 1);
+		ret = 6;
+	}
+
+	return (ret);
 }
 
 /**
@@ -25,10 +42,10 @@ int print_str(char *str)
 	int i = 0;
 
 	if (!str || !*str)
-		return (i);
-
-	while (*str)
-		print_char(*str++), i++;
+		i = print_char(0);
+	else
+		while (*str)
+			print_char(*str++), i++;
 
 	return (i);
 }
@@ -54,10 +71,15 @@ int _printf(const char *format, ...)
 		if (format[i] == '%')
 		{
 			i++;
-			if (format[i] == 'c')
-				print_char(va_arg(vargp, int)), printed++;
-			if (format[i] == 's')
-				printed += print_str((char *)va_arg(vargp, char *));
+			if (format[i])
+			{
+				if (format[i] == '%')
+					print_char('%'), printed++;
+				if (format[i] == 'c')
+					print_char(va_arg(vargp, int)), printed++;
+				if (format[i] == 's')
+					printed += print_str((char *)va_arg(vargp, char *));
+			}
 		}
 		else
 			print_char(format[i]), printed++;
