@@ -5,16 +5,19 @@
  *
  * @format: Format string used for printing.
  *
- * Return: Number of characters printed.
+ * Return: Number of characters printed on SUCCESS,
+ *         -1 on ERROR.
  */
 int _printf(const char *format, ...)
 {
 	va_list vargp;
 	int i = 0, printed = 0;
+	char *tmp = NULL;
 
-	if (!format || !*format)
-		return (printed);
-
+	if (!format)
+		return (-1);
+	if (!*format)
+		return (0);
 	va_start(vargp, format);
 	while (format[i])
 	{
@@ -29,15 +32,23 @@ int _printf(const char *format, ...)
 					print_char(va_arg(vargp, int)), printed++, i++;
 				else if (format[i] == 's')
 					printed += print_str((char *)va_arg(vargp, char *)), i++;
+				else if (format[i] == 'd' || format[i] == 'i')
+				{
+					tmp = intToStr(va_arg(vargp, int));
+					printed += print_str(tmp), i++;
+					if (*tmp != '0')
+						free(tmp);
+				}
 				else
 					print_char('%'), printed++;
 			}
+			else
+				return (-1);
 		}
 		else
 			print_char(format[i]), printed++, i++;
 	}
 	va_end(vargp);
-
 	return (printed);
 }
 
@@ -81,4 +92,50 @@ int print_str(char *str)
 			print_char(*str++), i++;
 
 	return (i);
+}
+
+/**
+ * intToStr - Converts an integer to a str.
+ *
+ * @num: Integer to be converted to a str.
+ *
+ * Return: Pointer to new string of integer on SUCCESS.
+ *         NULL on ERROR.
+ */
+char *intToStr(int num)
+{
+	int len = 0, isSigned = 0, isMin = 0, tmp = num;
+	char *str = NULL;
+
+	if (!num)
+		return ("0");
+
+	if (num == INT_MIN)
+		isSigned = 1, len++, num = tmp = INT_MAX, isMin = 1;
+	else if (num < 0)
+		isSigned = 1, len++, num = tmp *= -1;
+
+	while (tmp >= 1)
+		tmp = tmp / 10, len++;
+
+	str = malloc(sizeof(char) * (len + 1));
+	if (!str)
+		return (NULL);
+
+	str[len--] = 0;
+	while (num >= 1)
+		str[len--] = (num % 10) + '0', num /= 10;
+
+	if (isSigned)
+		str[len] = '-';
+
+	if (isMin)
+	{
+		len = 0;
+		while (str[len])
+			len++;
+		str[len - 1] += 1;
+	}
+
+	return (str);
 }
